@@ -1,9 +1,19 @@
-# Classes to be used across both parts of project
 from collections import namedtuple
-from scipy.stats import poisson
-import matplotlib.pyplot as plt
 import numpy as np
 import copy
+
+# Objects to create schedules and histories for later analysis
+
+# Notes: For each history and schedule you specify the number of
+# transactions you would like and the potential data items to be used
+# from there it will randomly select a subset of those data items for each
+# transaction. The number of operations for each transaction is randomly generated
+# in addition to what operations they will have and what order those operations
+# will appear in the final history/schedule. Histories and schedules are materially
+# the same except it is randomly determined whether the transactions in a schedule
+# will have an ending event (c or a) or not.
+
+# Currently number of transactions and data items is artificially limited to 5
 
 # Randomly generate bool responses for decision making
 randnumbs = list(np.random.poisson(.5, 1000))
@@ -12,16 +22,17 @@ def randBool():
     if (num == 0): return True
     else: return False
 
+# Randomly generate number between 0 and length-1
 bigrandnumbs = list(np.random.poisson(1000, 1000))
 def randIndex(length):
     num = bigrandnumbs.pop() % length
     return num
 
+# Randomly select a key from the given map
 def randKey(map):
     mkeys = map.keys()
     index = randIndex(len(mkeys))
     return mkeys[index]
-
 
 # To be used for structuring operation data
 Operation = namedtuple("Operation", "op dataitem")
@@ -29,13 +40,13 @@ Operation = namedtuple("Operation", "op dataitem")
 # Class used for creating transactions to be used in history and schedules
 class Transaction:
     def __init__(self, dataitems, numops, completed=True):
-        # specifies whether there is an ending abort or commit
+        # Specifies whether there is an ending abort or commit
         self.completed = completed
         if (len(dataitems) > 5): raise ValueError("Too many data items")
-        # operations to be generated randomly by another function and assigned here
         # Operation example: [Operation("r","y"), Operation("w","x")]
         self.operations = self.randGenerateOperations(dataitems,numops)
 
+    # For outputting transactions
     def __str__(self):
         output = ""
         for o in self.operations:
@@ -81,17 +92,19 @@ class Transaction:
 
 
 class History():
-    def __init__(self, numTrans, dataItems):
+    def __init__(self, numTrans, possibleDataItems):
         if (numTrans > 5): raise ValueError("Too many transactions")
-        self.transactions = self.generateTransactions(numTrans, dataItems)
+        # Randomly generate transactions then randomly order them
+        self.transactions = self.generateTransactions(numTrans, possibleDataItems)
         self.orderedOperations = self.orderOperations(self.transactions)
 
+    # For printing
     def __str__(self):
         output = "Transactions:\n"
         # Output all of the transactions
         for i in self.transactions.keys():
             output += "T"+str(i+1)+": "+str(self.transactions[i])+"\n"
-        output += "\nOrdered History:\n"
+        output += "\nOrdered Operations:\n"
 
         # Output the ordered history
         for o in self.orderedOperations:
@@ -105,12 +118,15 @@ class History():
 
         return output
 
-    def generateTransactions(self, numTrans, dataItems):
+    # Randomly generate the transactions for the history
+    def generateTransactions(self, numTrans, possibleDataItems):
         transactions = {}
         for i in range(numTrans):
-            # Can vary which data items are used in various transactions
+            # Randomly selects subset of data items to be used
+            randDataItemSubset = self.getRandSubset(possibleDataItems)
+            # Randomly generates the number of operations in the transaction (currently limited to 5)
             randNumOfOps = self.generateNumTransOps()
-            transactions[len(transactions.keys())] = Transaction(dataItems, randNumOfOps)
+            transactions[len(transactions.keys())] = Transaction(randDataItemSubset, randNumOfOps)
 
         return transactions
 
@@ -125,27 +141,59 @@ class History():
             # rt -> remaining transactions, ct -> current transaction
             tindex = randKey(temptrans)
             currenttrans = temptrans[tindex]
-            op = currenttrans.pop()
-            operations.append((tindex, op))
+            # Make sure not empty
             if(len(currenttrans) == 0):
                 temptrans.pop(tindex)
+                continue
+            op = currenttrans.pop()
+            operations.append((tindex, op))
+
 
         return operations
+
+    # Selects random subset of the dataitems list
+    def getRandSubset(self, dataitems):
+        outitems = []
+        tmpitems = copy.deepcopy(dataitems)
+        numitems = randIndex(5)+1 # number between 1 and 5 inclusive
+        for i in range(numitems):
+            if (len(tmpitems) == 0):
+                break
+            # pop a random data item and add it to output
+            item = tmpitems.pop(randIndex(len(tmpitems)))
+            outitems.append(item)
+
+        return outitems
 
     # Randomly generate number of operations for a transaction
     def generateNumTransOps(self):
         rlist = list(np.random.poisson(1000, 100))
-        num = rlist.pop() % 5
+        num = (rlist.pop() % 5) + 1 # num between 1 and 5
         return num
 
 
-class Schedule():
-    def __init__(self):
-        print "test"
+class Schedule(History):
+    def __init__(self, numTrans, possibleDataItems):
+        History.__init__(self, numTrans, possibleDataItems)
 
+    # Randomly generate the transactions for the schedule
+    def generateTransactions(self, numTrans, possibleDataItems):
+        transactions = {}
+        for i in range(numTrans):
+            # Randomly selects subset of data items to be used
+            randDataItemSubset = self.getRandSubset(possibleDataItems)
+            # Randomly generates the number of operations in the transaction (currently limited to 5)
+            randNumOfOps = self.generateNumTransOps()
+            # Randomly decide if ending event
+            completed = randBool()
+            transactions[len(transactions.keys())] = Transaction(randDataItemSubset, randNumOfOps, completed)
 
-h = History(4, ["xx","yy","zz","kk"])
+        return transactions
+
+# Test output
+h = History(5, ["x", "y","m","xx","yy","zz","kk"])
 print h
-
-## TODO: function to randomly select dataitems for transactions
+print
+s = Schedule(5, ["x", "y","m","xx","yy","zz","kk"])
+print s
 
