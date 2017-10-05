@@ -3,6 +3,7 @@ from collections import namedtuple
 from scipy.stats import poisson
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 
 # Randomly generate bool responses for decision making
 randnumbs = list(np.random.poisson(.5, 1000))
@@ -15,6 +16,12 @@ bigrandnumbs = list(np.random.poisson(1000, 1000))
 def randIndex(length):
     num = bigrandnumbs.pop() % length
     return num
+
+def randKey(map):
+    mkeys = map.keys()
+    index = randIndex(len(mkeys))
+    return mkeys[index]
+
 
 # To be used for structuring operation data
 Operation = namedtuple("Operation", "op dataitem")
@@ -38,8 +45,19 @@ class Transaction:
                 output += opstring
             else:
                 output += optype
-
         return output
+
+    def __len__(self):
+        return len(self.operations)
+
+    def __getitem__(self, i):
+        return self.operations[i]
+
+    def remove(self, i):
+        self.operations.pop(i)
+
+    def pop(self, i=0):
+        return self.operations.pop(i)
 
     # Generate transaction operations
     def randGenerateOperations(self,dataitems, numops):
@@ -48,7 +66,7 @@ class Transaction:
             op = ""
             if (randBool()): op = "r"
             else: op = "w"
-            item = dataitems[0]
+            item = dataitems[randIndex(len(dataitems))]
             operations.append(Operation(op,item))
 
         if(self.completed):
@@ -65,42 +83,54 @@ class Transaction:
 class History():
     def __init__(self, numTrans, dataItems):
         if (numTrans > 5): raise ValueError("Too many transactions")
-        self.transactions = self.generateTransactions(numTrans, [])
+        self.transactions = self.generateTransactions(numTrans, dataItems)
         self.orderedOperations = self.orderOperations(self.transactions)
 
     def __str__(self):
         output = "Transactions:\n"
         # Output all of the transactions
-        for i in range(len(self.transactions)):
-            output += "T"+str(i)+": "+str(self.transactions[i])+"\n"
+        for i in self.transactions.keys():
+            output += "T"+str(i+1)+": "+str(self.transactions[i])+"\n"
         output += "\nOrdered History:\n"
 
         # Output the ordered history
         for o in self.orderedOperations:
-            tnum = o[0] # Number of the transaction
+            tnum = o[0] # Index of the transaction
             optype, dataitem = o[1] # Operation and its data item
-            if(not dataitem == ""):
-                opstring = str(optype)+str(tnum)+"("+str(dataitem)+")"
+            if(not dataitem == ""): # if not ending operation (c or a)
+                opstring = str(optype)+str(tnum+1)+"("+str(dataitem)+")"
                 output += opstring
             else:
-                output += optype+str(tnum)
+                output += optype+str(tnum+1)
 
         return output
 
     def generateTransactions(self, numTrans, dataItems):
-        transactions = []
+        transactions = {}
         for i in range(numTrans):
             # Can vary which data items are used in various transactions
             randNumOfOps = self.generateNumTransOps()
-            transactions.append(Transaction(dataItems, randNumOfOps))
+            transactions[len(transactions.keys())] = Transaction(dataItems, randNumOfOps)
+
         return transactions
 
     # Take list of transactions and randomly order their operations
     def orderOperations(self, transactions):
-        # Format [(Transaction index, operation), ... , (Transaction index, operation)]
+        # Format {Transaction index => operation, ... , Transaction index => operation}
         # randomly select transaction and pop transactions when list of ops empty
         # continue until no remaining transactions
-        return []
+        operations = []
+        temptrans = copy.deepcopy(transactions)
+        while(len(temptrans) != 0):
+            # rt -> remaining transactions, ct -> current transaction
+            tindex = randKey(temptrans)
+            currenttrans = temptrans[tindex]
+            op = currenttrans.pop()
+            operations.append((tindex, op))
+            if(len(currenttrans) == 0):
+                temptrans.pop(tindex)
+
+        return operations
 
     # Randomly generate number of operations for a transaction
     def generateNumTransOps(self):
@@ -113,19 +143,9 @@ class Schedule():
     def __init__(self):
         print "test"
 
-# Testing transaction output
-t = Transaction(["x", "y", "z"], 10, completed=True)
-print t
 
-rr = list(np.random.poisson(1000, 100))
-count, bins, ignored = plt.hist(rr, 14, normed=True)
-plt.show()
-# total = set()
-# for e in list(rr):
-#     print (e % 5)
-# print(total)
+h = History(4, ["xx","yy","zz","kk"])
+print h
 
-## TODO: need a function that will get random generated number between ranges
-## TODO: need a function to randomly select objects from a list
-## TODO: fill in all of the random generation functions
+## TODO: function to randomly select dataitems for transactions
 
