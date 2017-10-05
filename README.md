@@ -1,6 +1,6 @@
 # ArchDBMSProject
 Project for making generating transaction histories and classifying them  
-## Random History/Schedule Generator  
+## Random History/Schedule Generator  (Completed)
 Brendan O'Connor
 
 ## Recoverability / Serializability Classifier  
