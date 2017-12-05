@@ -4,4 +4,4 @@ Project for making generating transaction histories and classifying them
 Brendan O'Connor
 
 ## Recoverability / Serializability Classifier (Completed)
-
+Manohar Boorlu, Nikhil Gurram, Aadarsh Vadakattu
