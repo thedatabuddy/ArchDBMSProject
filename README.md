@@ -1,7 +1,9 @@
-# ArchDBMSProject
-Project for making generating transaction histories and classifying them  
-## Random History/Schedule Generator  (Completed)
+# Serializability and Recoverability Classifier
+This is a project that generates random transaction histories for a database and then recognizes them if those transactions are Serializable and/or Recoverable.
+
+This project is collaboratively done by 
+#### Random History/Schedule Generator
 Brendan O'Connor
 
-## Recoverability / Serializability Classifier (Completed)
+#### Recoverability / Serializability Classifier
 Manohar Boorlu, Nikhil Gurram, Aadarsh Vadakattu
