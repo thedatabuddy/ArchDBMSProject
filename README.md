@@ -3,7 +3,9 @@ This is a project that generates random transaction histories for a database and
 
 This project is collaboratively done by 
 #### Random History/Schedule Generator
-Brendan O'Connor
+- [Brendan O'Connor](https://github.com/brendanoconnor913/)
 
 #### Recoverability / Serializability Classifier
-Manohar Boorlu, Nikhil Gurram, Aadarsh Vadakattu
+- [Manohar Boorlu](https://github.com/ManoharBoorlu/)
+- [Nikhil Gurram](https://github.com/nikhilgurram97/)
+- [Aadarsh Vadakattu](https://github.com/thedatabuddy/)
